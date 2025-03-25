@@ -1,0 +1,70 @@
+replicaCount: 1
+
+enterpriseEdition:
+  enabled: false
+  image:
+    repository: portainer/portainer-ee
+    tag: 2.21.5
+    pullPolicy: Always
+
+image:
+  repository: portainer/portainer-ce
+  tag: 2.21.5
+  pullPolicy: Always
+
+imagePullSecrets: []
+
+nodeSelector:
+  node-role.kubernetes.io/control-plane: ""
+
+tolerations: []
+
+serviceAccount:
+  annotations: {}
+  name: portainer-sa-clusteradmin
+
+localMgmt: true
+
+service:
+  type: ClusterIP
+  httpPort: 9000
+  httpsPort: 9443
+  edgePort: 8000
+  annotations: []
+
+tls:
+  force: false
+  existingSecret: ""
+
+mtls:
+  enable: false
+  existingSecret: ""
+
+feature:
+  flags:
+    - --log-level=INFO
+
+ingress:
+  enabled: false
+  ingressClassName: ""
+  annotations: []
+  hosts:
+    - host:
+      paths:
+        - path: "/"
+  tls: []
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 200Mi
+  requests:
+    cpu: 200m
+    memory: 200Mi
+
+persistence:
+  enabled: true
+  size: "1Gi"
+  annotations: {}
+  storageClass:
+  existingClaim:

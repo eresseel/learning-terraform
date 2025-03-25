@@ -1,0 +1,110 @@
+# https://github.com/rook/rook/blob/master/deploy/charts/rook-ceph/values.yaml
+image:
+  repository: docker.io/rook/ceph
+  tag: v1.16.1-11.gb1d918c0b
+  pullPolicy: IfNotPresent
+
+crds:
+  enabled: true
+
+resources:
+  limits:
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 128Mi
+
+nodeSelector:
+  node-role.kubernetes.io/control-plane: ""
+tolerations: []
+unreachableNodeTolerationSeconds: 5
+currentNamespaceOnly: false
+annotations: {}
+logLevel: INFO  # Options: `ERROR`, `WARNING`, `INFO`, `DEBUG`
+rbacEnable: true
+
+csi:
+  clusterName: rook-ceph
+  # enableRbdDriver: true
+  # enableCephfsDriver: true
+  disableCsiDriver: "false"
+  provisionerReplicas: 2
+  logLevel: 0
+  csiRBDPluginVolume:
+  #  - name: lib-modules
+  #    hostPath:
+  #      path: /run/booted-system/kernel-modules/lib/modules/
+  #  - name: host-nix
+  #    hostPath:
+  #      path: /nix
+
+  # -- The volume mounts of the CephCSI RBD plugin DaemonSet
+  csiRBDPluginVolumeMount:
+  #  - name: host-nix
+  #    mountPath: /nix
+  #    readOnly: true
+
+  # -- The volume of the CephCSI CephFS plugin DaemonSet
+  csiCephFSPluginVolume:
+  #  - name: lib-modules
+  #    hostPath:
+  #      path: /run/booted-system/kernel-modules/lib/modules/
+  #  - name: host-nix
+  #    hostPath:
+  #      path: /nix
+
+  # -- The volume mounts of the CephCSI CephFS plugin DaemonSet
+  csiCephFSPluginVolumeMount:
+  #  - name: host-nix
+  #    mountPath: /nix
+  #    readOnly: true
+  serviceMonitor:
+    enabled: true
+    interval: 10s
+    labels:
+      operator.insight.io/managed-by: insight
+    namespace: rook-ceph
+
+    cephcsi:
+    repository: quay.io/cephcsi/cephcsi
+    tag: v3.13.0
+
+  registrar:
+    repository: registry.k8s.io/sig-storage/csi-node-driver-registrar
+    tag: v2.13.0
+
+  provisioner:
+    repository: registry.k8s.io/sig-storage/csi-provisioner
+    tag: v5.1.0
+
+  snapshotter:
+    repository: registry.k8s.io/sig-storage/csi-snapshotter
+    tag: v8.2.0
+
+  attacher:
+    repository: registry.k8s.io/sig-storage/csi-attacher
+    tag: v4.8.0
+
+  resizer:
+    repository: registry.k8s.io/sig-storage/csi-resizer
+    tag: v1.13.1
+
+  imagePullPolicy: IfNotPresent
+
+  csiAddons:
+    enabled: true
+    repository: quay.io/csiaddons/k8s-sidecar
+    tag: v0.11.0
+
+  nfs:
+    enabled: true
+
+  topology:
+    enabled: false
+    domainLabels:
+    - kubernetes.io/hostname
+    - topology.kubernetes.io/zone
+    - topology.rook.io/rack
+
+monitoring:
+  enabled: true

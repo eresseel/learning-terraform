@@ -1,0 +1,107 @@
+---
+controller:
+  enabled: true
+  # -- Controller log level. Must be one of: `all`, `debug`, `info`, `warn`, `error` or `none`
+  logLevel: warn
+  resources:
+    limits:
+      cpu: 100m
+      memory: 100Mi
+    requests:
+      cpu: 100m
+      memory: 100Mi
+  tolerations:
+  - key: "node-role.kubernetes.io/master"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
+  - key: "node.kubernetes.io/disk-pressure"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "node.kubernetes.io/memory-pressure"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "node.kubernetes.io/network-unavailable"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "node.kubernetes.io/not-ready"
+    operator: "Exists"
+    effect: "NoExecute"
+  - key: "node.kubernetes.io/pid-pressure"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "node.kubernetes.io/unreachable"
+    operator: "Exists"
+    effect: "NoExecute"
+  - key: "node.kubernetes.io/unschedulable"
+    operator: "Exists"
+    effect: "NoSchedule"
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: ""
+
+speaker:
+  enabled: true
+  # -- Speaker log level. Must be one of: `all`, `debug`, `info`, `warn`, `error` or `none`
+  logLevel: warn
+  resources:
+    limits:
+      cpu: 100m
+      memory: 100Mi
+    requests:
+      cpu: 100m
+      memory: 100Mi
+    memberlist:
+      enabled: false
+  tolerations:
+  - key: "node-role.kubernetes.io/master"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
+  - key: "node.kubernetes.io/disk-pressure"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "node.kubernetes.io/memory-pressure"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "node.kubernetes.io/network-unavailable"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "node.kubernetes.io/not-ready"
+    operator: "Exists"
+    effect: "NoExecute"
+  - key: "node.kubernetes.io/pid-pressure"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "node.kubernetes.io/unreachable"
+    operator: "Exists"
+    effect: "NoExecute"
+  - key: "node.kubernetes.io/unschedulable"
+    operator: "Exists"
+    effect: "NoSchedule"
+  nodeSelector:
+    kubernetes.io/os: linux
+  frr:
+    enabled: false
+    namespace: ""
+
+frrk8s:
+  enabled: false
+  external: false
+
+crds:
+  enabled: true
+  validationFailurePolicy: Fail
+
+prometheus:
+  scrapeAnnotations: true
+  metricsPort: 7472
+  serviceAccount: ""
+  namespace: ""
+  podMonitor:
+    enabled: false
+  serviceMonitor:
+    enabled: false
+
+prometheusRule:
+    # enable alertmanager alerts
+    enabled: true

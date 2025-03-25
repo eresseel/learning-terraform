@@ -1,0 +1,42 @@
+image:
+  repository: registry.k8s.io/metrics-server/metrics-server
+  tag: "v0.7.2"
+  pullPolicy: IfNotPresent
+
+nodeSelector:
+  node-role.kubernetes.io/control-plane: ""
+
+replicas: 1
+
+defaultArgs:
+  - --kubelet-insecure-tls
+  - --cert-dir=/tmp
+  - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+  - --kubelet-use-node-status-port
+  - --metric-resolution=15s
+
+service:
+  type: ClusterIP
+  port: 443
+  annotations: {}
+  labels: {}
+
+metrics:
+  enabled: true
+
+serviceMonitor:
+  enabled: false
+  additionalLabels: {}
+  interval: 1m
+  scrapeTimeout: 10s
+  metricRelabelings: []
+  relabelings: []
+
+# See https://github.com/kubernetes-sigs/metrics-server#scaling
+resources:
+  requests:
+    cpu: 100m
+    memory: 200Mi
+  limits:
+    cpu: 100m
+    memory: 200Mi

@@ -1,0 +1,15 @@
+# Local .terraform directories
+env/live/.terraform
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+!*.tfstate.secret
+
+backend.tf
+secret.auto.tfvars
+env/live/.terraform.lock.hcl
+
+# vscode directories
+.vscode
+.vagrant
