@@ -7,9 +7,9 @@ module "namespace" {
 //  source = "../../modules/ceph"
 //}
 
-module "metrics" {
-  source     = "../../modules/metrics"
-}
+//module "metrics" {
+//  source     = "../../modules/metrics"
+//}
 
 module "metallb" {
   depends_on = [module.namespace]
@@ -21,22 +21,27 @@ module "traefik" {
   source     = "../../modules/traefik"
 }
 
-module "portainer" {
+//module "portainer" {
+//  depends_on = [module.namespace]
+//  source     = "../../modules/portainer"
+//}
+//
+//module "prometheus" {
+//  depends_on = [module.namespace]
+//  source = "../../modules/prometheus"
+//}
+//
+//module "grafana" {
+//  depends_on = [module.namespace]
+//  source = "../../modules/grafana"
+//}
+//
+//module "gitlab" {
+//  depends_on = [module.namespace]
+//  source = "../../modules/gitlab"
+//}
+//
+module "jaeger" {
   depends_on = [module.namespace]
-  source     = "../../modules/portainer"
-}
-
-module "prometheus" {
-  depends_on = [module.namespace]
-  source = "../../modules/prometheus"
-}
-
-module "grafana" {
-  depends_on = [module.namespace]
-  source = "../../modules/grafana"
-}
-
-module "gitlab" {
-  depends_on = [module.namespace]
-  source = "../../modules/gitlab"
+  source = "../../modules/jaeger"
 }

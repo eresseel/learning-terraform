@@ -8,13 +8,14 @@ ingressRoute:
     enabled: true
     annotations: {}
     labels: {}
-    entryPoints: ["web"]
+    entryPoints: ["web", "websecure"]
     matchRule: Host(`traefik.eresseel.org`) && PathPrefix(`/dashboard`) || Host(`traefik.eresseel.org`) && PathPrefix(`/api`)
     services:
       - name: api@internal
         kind: TraefikService
     middlewares:
-      - name: common-auth
+      - name: secured
+    tls: {}
   healthcheck:
     enabled: true
     annotations: {}
@@ -28,6 +29,15 @@ ingressRoute:
 
 # https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/
 extraObjects:
+  - apiVersion: traefik.io/v1alpha1
+    kind: TLSStore
+    metadata:
+      name: wildcard-cert
+      namespace: traefik
+    spec:
+      defaultCertificate:
+        secretName: wildcard-cert-secret2
+
   - apiVersion: v1
     kind: Secret
     metadata:
@@ -38,6 +48,17 @@ extraObjects:
       username: dXNlcg== # username: user
       password: cGFzc3dvcmQ= # password: password
   - apiVersion: traefik.io/v1alpha1
+
+    kind: Middleware
+    metadata:
+      name: secured
+      namespace: traefik
+    spec:
+      chain:
+        middlewares:
+        - name: common-auth
+        - name: https-only
+  - apiVersion: traefik.io/v1alpha1
     kind: Middleware
     metadata:
       name: common-auth
@@ -47,6 +68,16 @@ extraObjects:
         removeHeader: true
         secret: common-auth-secret
   - apiVersion: traefik.io/v1alpha1
+    kind: Middleware
+    metadata:
+      name: https-only
+      namespace: traefik
+    spec:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+  - apiVersion: traefik.io/v1alpha1
     kind: IngressRoute
     metadata:
       name: traefik-metrics
@@ -54,21 +85,32 @@ extraObjects:
     spec:
       entryPoints:
         - web
+        - websecure
       routes:
         - match: Host(`traefik.eresseel.org`) && PathPrefix(`/metrics`)
           kind: Rule
           strategy: RoundRobin
-          scheme: http
+          scheme: https
           observability:
             accesslogs: true
             metrics: true
             tracing: true
+          middlewares:
+            - name: secured
           services:
             - name: prometheus@internal
               kind: TraefikService
               port: 9100
-          middlewares:
-            - name: common-auth
+
+  - apiVersion: traefik.io/v1alpha1
+    kind: Middleware
+    metadata:
+      name: https-only
+      namespace: monitoring
+    spec:
+      redirectScheme:
+        scheme: https
+        permanent: true
   - apiVersion: traefik.io/v1alpha1
     kind: IngressRoute
     metadata:
@@ -77,15 +119,18 @@ extraObjects:
     spec:
       entryPoints:
         - web
+        - websecure
       routes:
         - match: Host(`prometheus.eresseel.org`) && PathPrefix(`/`) || Host(`prometheus.eresseel.org`) && PathPrefix(`/api`)
           kind: Rule
           strategy: RoundRobin
-          scheme: http
+          scheme: https
           observability:
             accesslogs: true
             metrics: true
             tracing: true
+          middlewares:
+            - name: https-only
           services:
             - name: prometheus-server
               kind: Service
@@ -98,15 +143,18 @@ extraObjects:
     spec:
       entryPoints:
         - web
+        - websecure
       routes:
         - match: Host(`alertmanager.eresseel.org`) && PathPrefix(`/`)
           kind: Rule
           strategy: RoundRobin
-          scheme: http
+          scheme: https
           observability:
             accesslogs: true
             metrics: true
             tracing: true
+          middlewares:
+            - name: https-only
           services:
             - name: prometheus-alertmanager
               kind: Service
@@ -119,19 +167,32 @@ extraObjects:
     spec:
       entryPoints:
         - web
+        - websecure
       routes:
         - match: Host(`grafana.eresseel.org`) && PathPrefix(`/`)
           kind: Rule
           strategy: RoundRobin
-          scheme: http
+          scheme: https
           observability:
             accesslogs: true
             metrics: true
             tracing: true
+          middlewares:
+            - name: https-only
           services:
             - name: grafana
               kind: Service
               port: 80
+
+  - apiVersion: traefik.io/v1alpha1
+    kind: Middleware
+    metadata:
+      name: https-only
+      namespace: portainer
+    spec:
+      redirectScheme:
+        scheme: https
+        permanent: true
   - apiVersion: traefik.io/v1alpha1
     kind: IngressRoute
     metadata:
@@ -140,19 +201,32 @@ extraObjects:
     spec:
       entryPoints:
         - web
+        - websecure
       routes:
         - match: Host(`portainer.eresseel.org`) && PathPrefix(`/`) || Host(`portainer.eresseel.org`) && PathPrefix(`/api`)
           kind: Rule
           strategy: RoundRobin
-          scheme: http
+          scheme: https
           observability:
             accesslogs: true
             metrics: true
             tracing: true
+          middlewares:
+            - name: https-only
           services:
             - name: portainer
               kind: Service
               port: 9000
+
+  - apiVersion: traefik.io/v1alpha1
+    kind: Middleware
+    metadata:
+      name: https-only
+      namespace: ci-cd
+    spec:
+      redirectScheme:
+        scheme: https
+        permanent: true
   - apiVersion: traefik.io/v1alpha1
     kind: IngressRoute
     metadata:
@@ -161,19 +235,32 @@ extraObjects:
     spec:
       entryPoints:
         - web
+        - websecure
       routes:
         - match: Host(`gitlab.eresseel.org`) && PathPrefix(`/`) || Host(`gitlab.eresseel.org`) && PathPrefix(`/users/sign_in`)
           kind: Rule
           strategy: RoundRobin
-          scheme: http
+          scheme: https
           observability:
             accesslogs: true
             metrics: true
             tracing: true
+          middlewares:
+            - name: https-only
           services:
             - name: gitlab-webservice-default
               kind: Service
               port: 8080
+
+  - apiVersion: traefik.io/v1alpha1
+    kind: Middleware
+    metadata:
+      name: https-only
+      namespace: rook-ceph
+    spec:
+      redirectScheme:
+        scheme: https
+        permanent: true
   - apiVersion: traefik.io/v1alpha1
     kind: IngressRoute
     metadata:
@@ -182,6 +269,7 @@ extraObjects:
     spec:
       entryPoints:
         - web
+        - websecure
       routes:
         - match: Host(`rook-ceph.eresseel.org`) && PathPrefix(`/`)
           kind: Rule
@@ -191,10 +279,46 @@ extraObjects:
             accesslogs: true
             metrics: true
             tracing: true
+          middlewares:
+            - name: https-only
           services:
             - name: rook-ceph-mgr-dashboard
               kind: Service
               port: 8080
+
+  - apiVersion: traefik.io/v1alpha1
+    kind: Middleware
+    metadata:
+      name: https-only
+      namespace: tracing
+    spec:
+      redirectScheme:
+        scheme: https
+        permanent: true
+  - apiVersion: traefik.io/v1alpha1
+    kind: IngressRoute
+    metadata:
+      name: jaeger-ui
+      namespace: tracing
+    spec:
+      entryPoints:
+        - web
+        - websecure
+      routes:
+        - match: Host(`jaeger.eresseel.org`) && PathPrefix(`/`)
+          kind: Rule
+          strategy: RoundRobin
+          scheme: https
+          observability:
+            accesslogs: true
+            metrics: true
+            tracing: true
+          middlewares:
+            - name: https-only
+          services:
+            - name: jaeger-query
+              kind: Service
+              port: 80
 
 ingressClass:
   enabled: true
@@ -267,7 +391,7 @@ tracing:
     enabled: true
     http:
       enabled: true
-      endpoint: "http://localhost:4318/v1/traces"
+      endpoint: "http://jaeger-collector.tracing.svc.cluster.local:4318/v1/traces"
     grpc:
       enabled: false
 
